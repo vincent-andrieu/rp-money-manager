@@ -1,0 +1,38 @@
+{
+    "name": "rp-money-manager",
+    "version": "1.0.0",
+    "description": "Manage all money interactions into a roleplay server",
+    "main": "main.js",
+    "scripts": {
+        "start": "nodemon --watch src -e ts --exec npm run launch",
+        "launch": "tsc && node build/main.js",
+        "build": "tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/vincent-andrieu/rp-money-manager.git"
+    },
+    "author": "Vincent Andrieu",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/vincent-andrieu/rp-money-manager/issues"
+    },
+    "homepage": "https://github.com/vincent-andrieu/rp-money-manager#readme",
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^6.17.0",
+        "@typescript-eslint/parser": "^6.17.0",
+        "eslint": "^8.56.0",
+        "nodemon": "^3.0.2",
+        "typescript": "^5.3.3"
+    },
+    "dependencies": {
+        "dotenv": "^16.3.1",
+        "module-alias": "^2.2.3",
+        "mongoose": "^8.0.3"
+    },
+    "_moduleAliases": {
+        "@core": "build/core",
+        "@models": "build/models",
+        "@schemas": "build/schemas"
+    }
+}

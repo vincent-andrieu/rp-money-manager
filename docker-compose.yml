@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+    mongo1:
+        image: mongo:6
+        container_name: mongo1
+        ports:
+            - 27017:27017
+        networks:
+            - mongo-cluster
+        restart: always
+        command: --replSet rs0
+
+    mongo2:
+        image: mongo:6
+        container_name: mongo2
+        networks:
+            - mongo-cluster
+        restart: always
+        command: --replSet rs0
+
+    mongo3:
+        image: mongo:6
+        container_name: mongo3
+        networks:
+            - mongo-cluster
+        restart: always
+        command: --replSet rs0
+
+    init-mongo:
+        image: mongo:6
+        networks:
+            - mongo-cluster
+        restart: no
+        depends_on:
+            - mongo1
+            - mongo2
+            - mongo3
+        entrypoint: >
+            bash -c '
+                sleep 3s &&
+                mongosh mongo1:27017 --eval "rs.initiate({_id: \"rs0\", members: [
+                    {_id: 0, host: \"mongo1:27017\"},
+                    {_id: 1, host: \"mongo2:27017\"},
+                    {_id: 2, host: \"mongo3:27017\"}
+                ]})"
+            '
+
+networks:
+    mongo-cluster: null

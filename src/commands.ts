@@ -19,6 +19,8 @@ export async function parseCommand(command: string): Promise<void> {
             console.log('\taddWhiteCash <userId> <amount> - add white cash to a user');
             console.log('\taddBlackCash <userId> <amount> - add black cash to a user');
             console.log('\tpayCash <fromUserId> <toUserId> <amount> [white|black|both] - pay cash from a user to another');
+            console.log('\taddBalance <bankId> <amount> - add balance to a bank account');
+            console.log('\tpay <fromUserId> <toUserId> <amount> - pay by card from a user to another');
             break;
         case 'exit':
             process.exit(0);
@@ -53,6 +55,11 @@ export async function parseCommand(command: string): Promise<void> {
         case 'paycash':
             await userSchema.payCash(toObjectId(args[0]), toObjectId(args[1]), parseInt(args[2]), args[3] as CashPaiementType | undefined);
             console.log("User", args[0], "paid cash", args[2] + "$", "to user", args[1]);
+            break;
+
+        case 'addbalance':
+            await bankAccountSchema.addBalance(toObjectId(args[0]), parseInt(args[1]));
+            console.log(args[1] + "$ added to bank account", args[0]);
             break;
         case 'pay':
             await bankAccountSchema.pay(toObjectId(args[0]), toObjectId(args[1]), parseInt(args[2]));

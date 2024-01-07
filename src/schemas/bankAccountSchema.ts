@@ -8,6 +8,10 @@ export default class BankAccountSchema extends TemplateSchema<BankAccount> {
         super(BankAccount, "bankAccounts", bankAccountSchema);
     }
 
+    public async addBalance(id: ObjectId, amount: number): Promise<void> {
+        await this._model.findByIdAndUpdate(id, { $inc: { balance: amount } });
+    }
+
     public async pay(from: ObjectId, to: ObjectId, amount: number): Promise<void> {
         const session = await this._model.startSession();
 

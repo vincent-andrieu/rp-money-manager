@@ -1,3 +1,5 @@
+import { ClientSession } from "mongoose";
+
 import { CashPaiementType } from "@core/interfaces/bankAccount";
 import User from "@core/interfaces/user";
 import { ObjectId } from "@core/utils";
@@ -9,15 +11,30 @@ export default class UserSchema extends TemplateSchema<User> {
         super(User, "users", userSchema);
     }
 
-    public async addWhiteCash(id: ObjectId, amount: number): Promise<void> {
-        await this._model.findByIdAndUpdate(id, { $inc: { whiteCash: amount } });
+    public async addWhiteCash(id: ObjectId, amount: number, session?: ClientSession): Promise<User> {
+        const result = await this._model.findByIdAndUpdate(id, { $inc: { whiteCash: amount } }, { new: true, session });
+
+        if (!result)
+            throw new Error("User not found");
+        return new User(result.toObject());
     }
 
     public async addBlackCash(id: ObjectId, amount: number): Promise<void> {
-        await this._model.findByIdAndUpdate(id, { $inc: { blackCash: amount } });
+        const result = await this._model.findByIdAndUpdate(id, { $inc: { blackCash: amount } });
+
+        if (!result)
+            throw new Error("User not found");
     }
 
-    public async payCash(from: ObjectId, to: ObjectId, amount: number, cashType: CashPaiementType = 'both'): Promise<void> {
+    public async removeWhiteCash(id: ObjectId, amount: number, session?: ClientSession): Promise<User> {
+        const result = await this._model.findByIdAndUpdate(id, { $inc: { whiteCash: -amount } }, { new: true, session });
+
+        if (!result)
+            throw new Error("User not found");
+        return new User(result.toObject());
+    }
+
+    public async pay(from: ObjectId, to: ObjectId, amount: number, cashType: CashPaiementType = 'both'): Promise<void> {
         switch (cashType) {
         case 'white':
             await this._payWhiteCash(from, to, amount);

@@ -18,3 +18,11 @@ export function toObjectId(id: ObjectId | string) {
 export function isObjectId(id: Parameters<typeof mongoose.Types.ObjectId.isValid>[0]) {
     return mongoose.Types.ObjectId.isValid(id);
 }
+
+export function getObjectId(obj: { _id?: ObjectId } | ObjectId): ObjectId {
+    if (obj._id)
+        return obj._id;
+    if (!obj)
+        throw new Error("Impossible to get ObjectId");
+    return obj as ObjectId;
+}

@@ -1,15 +1,28 @@
 import BankAccount from "@core/interfaces/bankAccount";
 import { ObjectId } from "@core/utils";
 import bankAccountSchema from "@models/bankAccountModel";
+import { ClientSession } from "mongoose";
 import TemplateSchema from "./templateSchema";
 
 export default class BankAccountSchema extends TemplateSchema<BankAccount> {
     constructor() {
-        super(BankAccount, "bankAccounts", bankAccountSchema);
+        super(BankAccount, "bank-accounts", bankAccountSchema);
     }
 
-    public async addBalance(id: ObjectId, amount: number): Promise<void> {
-        await this._model.findByIdAndUpdate(id, { $inc: { balance: amount } });
+    public async addBalance(id: ObjectId, amount: number, session?: ClientSession): Promise<BankAccount> {
+        const result = await this._model.findByIdAndUpdate(id, { $inc: { balance: amount } }, { new: true, session });
+
+        if (!result)
+            throw new Error("Bank account not found");
+        return new BankAccount(result.toObject());
+    }
+
+    public async removeBalance(id: ObjectId, amount: number, session?: ClientSession): Promise<BankAccount> {
+        const result = await this._model.findByIdAndUpdate(id, { $inc: { balance: -amount } }, { new: true, session });
+
+        if (!result)
+            throw "Not enough money";
+        return new BankAccount(result.toObject());
     }
 
     public async pay(from: ObjectId, to: ObjectId, amount: number): Promise<void> {

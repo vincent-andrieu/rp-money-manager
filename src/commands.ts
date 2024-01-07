@@ -3,9 +3,11 @@ import User from "@core/interfaces/user";
 import { toObjectId } from "@core/utils";
 import BankAccountSchema from "@schemas/bankAccountSchema";
 import UserSchema from "@schemas/userSchema";
+import TransactionService from "./services/transactionService";
 
 export async function parseCommand(command: string): Promise<void> {
     const [cmd, ...args] = command.split(' ');
+    const transactionService = new TransactionService();
     const userSchema = new UserSchema();
     const bankAccountSchema = new BankAccountSchema();
 
@@ -14,16 +16,14 @@ export async function parseCommand(command: string): Promise<void> {
         case 'help':
             console.log('Available commands:');
             console.log('\thelp - show this help');
-            console.log('\texit - exit the program');
             console.log('\taddUser - add a user');
+            console.log("\tdepositCash <userId> <amount> - deposit cash to a user's bank account");
+            console.log('\twithdrawCash <userId> <amount> - withdraw cash from a user\'s bank account');
             console.log('\taddWhiteCash <userId> <amount> - add white cash to a user');
             console.log('\taddBlackCash <userId> <amount> - add black cash to a user');
             console.log('\tpayCash <fromUserId> <toUserId> <amount> [white|black|both] - pay cash from a user to another');
             console.log('\taddBalance <bankId> <amount> - add balance to a bank account');
-            console.log('\tpay <fromUserId> <toUserId> <amount> - pay by card from a user to another');
-            break;
-        case 'exit':
-            process.exit(0);
+            console.log('\tpay <bankSourceId> <bankDestinationId> <amount> - pay by card from a bank account to another');
             break;
 
         case 'adduser': {
@@ -44,6 +44,14 @@ export async function parseCommand(command: string): Promise<void> {
             break;
         }
 
+        case 'depositcash':
+            await transactionService.depositCash(toObjectId(args[0]), parseInt(args[1]));
+            console.log("User", args[0], "deposited", args[1] + "$ at the bank");
+            break;
+        case 'withdrawcash':
+            await transactionService.withdrawCash(toObjectId(args[0]), parseInt(args[1]));
+            console.log("User", args[0], "withdrew", args[1] + "$ from the bank");
+            break;
         case 'addwhitecash':
             await userSchema.addWhiteCash(toObjectId(args[0]), parseInt(args[1]));
             console.log("White cash added to user", args[0]);
@@ -53,7 +61,7 @@ export async function parseCommand(command: string): Promise<void> {
             console.log("Black cash added to user", args[0]);
             break;
         case 'paycash':
-            await userSchema.payCash(toObjectId(args[0]), toObjectId(args[1]), parseInt(args[2]), args[3] as CashPaiementType | undefined);
+            await transactionService.payByCash(toObjectId(args[0]), toObjectId(args[1]), parseInt(args[2]), args[3] as CashPaiementType);
             console.log("User", args[0], "paid cash", args[2] + "$", "to user", args[1]);
             break;
 
@@ -62,7 +70,7 @@ export async function parseCommand(command: string): Promise<void> {
             console.log(args[1] + "$ added to bank account", args[0]);
             break;
         case 'pay':
-            await bankAccountSchema.pay(toObjectId(args[0]), toObjectId(args[1]), parseInt(args[2]));
+            await transactionService.payByCard(toObjectId(args[0]), toObjectId(args[1]), parseInt(args[2]));
             console.log("User", args[0], "paid by card", args[2] + "$", "to user", args[1]);
             break;
 

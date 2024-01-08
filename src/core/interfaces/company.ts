@@ -2,11 +2,11 @@ import { ObjectId, isObjectId, toObjectId } from "@core/utils";
 import BankAccount from "./bankAccount";
 import TemplateObject, { NonTemplateObjectFunctions } from './templateObject';
 
-export default class Compagny extends TemplateObject {
+export default class Company extends TemplateObject {
 
     public bank: BankAccount | ObjectId;
 
-    constructor(obj: NonTemplateObjectFunctions<Compagny>) {
+    constructor(obj: NonTemplateObjectFunctions<Company>) {
         super(obj);
 
         if (!(obj.bank instanceof BankAccount) && isObjectId(obj.bank))
@@ -21,7 +21,7 @@ export default class Compagny extends TemplateObject {
 
     protected _validation(): void {
         if (!(this.bank instanceof BankAccount) && !isObjectId(this.bank))
-            throw new Error("[Compagny] Bank must be an ObjectId or a BankAccount");
+            throw new Error("[Company] Bank must be an ObjectId or a BankAccount");
     }
 
 }

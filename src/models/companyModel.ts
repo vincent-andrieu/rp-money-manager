@@ -1,7 +1,7 @@
-import Compagny from "@core/interfaces/compagny";
+import Company from "@core/interfaces/company";
 import mongoose from "mongoose";
 
-const compagnySchema = new mongoose.Schema<Compagny>({
+const companySchema = new mongoose.Schema<Company>({
     bank: { type: mongoose.Schema.Types.ObjectId, ref: "bank", required: true }
 }, {
     toObject: { virtuals: true },
@@ -9,4 +9,4 @@ const compagnySchema = new mongoose.Schema<Compagny>({
     timestamps: true
 });
 
-export default compagnySchema;
+export default companySchema;

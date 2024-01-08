@@ -1,7 +1,9 @@
 import BankAccount, { CashPaiementType } from "@core/interfaces/bankAccount";
+import Company from "@core/interfaces/company";
 import User from "@core/interfaces/user";
 import { toObjectId } from "@core/utils";
 import BankAccountSchema from "@schemas/bankAccountSchema";
+import CompanySchema from "@schemas/companySchema";
 import UserSchema from "@schemas/userSchema";
 import TransactionService from "./services/transactionService";
 
@@ -10,6 +12,7 @@ export async function parseCommand(command: string): Promise<void> {
     const transactionService = new TransactionService();
     const userSchema = new UserSchema();
     const bankAccountSchema = new BankAccountSchema();
+    const companySchema = new CompanySchema();
 
     try {
         switch (cmd.toLowerCase()) {
@@ -17,6 +20,7 @@ export async function parseCommand(command: string): Promise<void> {
             console.log('Available commands:');
             console.log('\thelp - show this help');
             console.log('\taddUser - add a user');
+            console.log('\taddCompany - add a company');
             console.log("\tdepositCash <userId> <amount> - deposit cash to a user's bank account");
             console.log('\twithdrawCash <userId> <amount> - withdraw cash from a user\'s bank account');
             console.log('\taddWhiteCash <userId> <amount> - add white cash to a user');
@@ -41,6 +45,21 @@ export async function parseCommand(command: string): Promise<void> {
             console.log("User created");
             console.log("\tUser", user._id?.toString());
             console.log("\tBank", user.bank.toString());
+            break;
+        }
+        case 'addcompany': {
+            const companyBank = await bankAccountSchema.add(new BankAccount({
+                balance: 0
+            }));
+
+            if (!companyBank._id)
+                throw new Error("Failed to create bank account");
+            const company = await companySchema.add(new Company({
+                bank: companyBank._id
+            }));
+            console.log("Company created");
+            console.log("\tCompany", company._id?.toString());
+            console.log("\tBank", company.bank.toString());
             break;
         }
 

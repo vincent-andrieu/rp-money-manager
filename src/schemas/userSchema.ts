@@ -34,6 +34,42 @@ export default class UserSchema extends TemplateSchema<User> {
         return new User(result.toObject());
     }
 
+    public async removeBothCash(id: ObjectId, amount: number, session?: ClientSession): Promise<{
+        user: User,
+        removedBlackCash: number,
+        removedWhiteCash: number
+    }> {
+        const userResult = await this._model.findById(id, 'blackCash').session(session || null);
+        if (!userResult)
+            throw new Error("Source user not found");
+
+        let user = new User(userResult.toObject());
+        const blackAmount = amount < user.blackCash ? amount : user.blackCash;
+        const whiteAmount = amount - blackAmount;
+        const editedUserResult = await this._model.findByIdAndUpdate(id, {
+            $inc: {
+                blackCash: -blackAmount,
+                whiteCash: -whiteAmount
+            }
+        },
+        { new: true, session });
+
+        if (!editedUserResult) {
+            await session?.abortTransaction();
+            throw new Error("Source user not found");
+        }
+        user = new User(editedUserResult.toObject());
+        if (user.whiteCash < 0 || user.blackCash < 0) {
+            await session?.abortTransaction();
+            throw "Not enough cash";
+        }
+        return {
+            user,
+            removedBlackCash: blackAmount,
+            removedWhiteCash: whiteAmount
+        };
+    }
+
     public async pay(from: ObjectId, to: ObjectId, amount: number, cashType: CashPaiementType = 'both'): Promise<void> {
         switch (cashType) {
         case 'white':
@@ -103,35 +139,12 @@ export default class UserSchema extends TemplateSchema<User> {
 
         try {
             await session.withTransaction(async () => {
-                const fromQuery = await this._model.findById(from).session(session);
-                if (!fromQuery)
-                    throw new Error("Source user not found");
-
-                let fromUser = new User(fromQuery.toObject());
-                const blackAmount = amount < fromUser.blackCash ? amount : fromUser.blackCash;
-                const whiteAmount = amount - blackAmount;
-                const fromResult = await this._model.findByIdAndUpdate(from, {
-                    $inc: {
-                        blackCash: -blackAmount,
-                        whiteCash: -whiteAmount
-                    }
-                },
-                { new: true, session });
-
-                if (!fromResult) {
-                    await session.abortTransaction();
-                    throw new Error("Source user not found");
-                }
-                fromUser = new User(fromResult.toObject());
-                if (fromUser.whiteCash < 0 || fromUser.blackCash < 0) {
-                    await session.abortTransaction();
-                    throw "Not enough cash";
-                }
+                const { removedBlackCash, removedWhiteCash } = await this.removeBothCash(from, amount, session);
 
                 const toResult = await this._model.findByIdAndUpdate(to, {
                     $inc: {
-                        blackCash: blackAmount,
-                        whiteCash: whiteAmount
+                        blackCash: removedBlackCash,
+                        whiteCash: removedWhiteCash
                     }
                 },
                 { session });
